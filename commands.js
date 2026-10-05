@@ -1,23 +1,29 @@
 Office.onReady();
 
-function ping(step) {
-    fetch("./" + step + "?t=" + Date.now())
-        .catch(function () {});
-}
-
-ping("GITHUB_JS_LOADED");
-
 function onItemSendHandler(event) {
-    ping("GITHUB_HANDLER_FIRED");
+    Office.context.mailbox.item.body.getAsync(
+        Office.CoercionType.Html,
+        function (result) {
+            if (result.status !== Office.AsyncResultStatus.Succeeded) {
+                event.completed({ allowEvent: true });
+                return;
+            }
 
-    event.completed({
-        allowEvent: true
-    });
+            var marker =
+                "<p><strong>[AUTOMATIC MODIFICATION TEST PASSED]</strong></p>";
+
+            Office.context.mailbox.item.body.setAsync(
+                result.value + marker,
+                { coercionType: Office.CoercionType.Html },
+                function () {
+                    event.completed({ allowEvent: true });
+                }
+            );
+        }
+    );
 }
 
 Office.actions.associate(
     "onMessageSendHandler",
     onItemSendHandler
 );
-
-ping("GITHUB_HANDLER_ASSOCIATED");
